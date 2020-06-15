@@ -118,8 +118,8 @@ def main(input_dir, output_dir, image_size, margin, random_order, detect_multipl
 
 
 if __name__ == '__main__':
-    input_dir = './data/lfw'
-    output_dir = './data/lfw_mtcnn_224'
+    input_dir = '../../data/lfw'
+    output_dir = '../../data/lfw_mtcnn_224'
     image_size = 224
     margin = 44
     random_order = True
