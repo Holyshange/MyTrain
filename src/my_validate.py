@@ -25,19 +25,19 @@ def get_embeddings(data_dir, model_dir):
     with tf.Graph().as_default():
         with tf.Session() as sess:
             my_train.load_model(sess, model_dir)
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
             images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            prelogits = tf.get_default_graph().get_tensor_by_name("prelogits:0")
-#             embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+#             prelogits = tf.get_default_graph().get_tensor_by_name("prelogits:0")
 
             for image_path in image_path_list:
                 images = get_images(image_path)
                 feed_dict = {images_placeholder: images, phase_train_placeholder: False}
                 time1 = time.time()
-                sess.run(prelogits, feed_dict=feed_dict)
+                sess.run(embeddings, feed_dict=feed_dict)
                 time2 = time.time()
                 total_time += (time2 - time1)
-                print('speed: calculate %f images per second.' %(total_image_num/total_time))
+                print('speed: calculate %f images per second.' % (total_image_num/total_time))
 
 # ================================================================================================
 
@@ -106,8 +106,15 @@ def run_validate():
     validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, 
                   batch_size, gpu_memory_fraction)
 
+def test_1():
+    image_path = '../data/lfw_mtcnn_224/Aaron_Eckhart/Aaron_Eckhart_0001.png'
+    images = get_images(image_path)
+    print(images)
+    None
+
 if __name__ == '__main__':
-    run_validate()
+#     run_validate()
+#     test_1()
     print('____End____')
 
 
