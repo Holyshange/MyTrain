@@ -101,7 +101,7 @@ def my_classifier(old_dir, new_dir, model_dir, image_width, image_height):
             my_train.load_model(model_dir)
             images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
             phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-            logits = tf.get_default_graph().get_tensor_by_name("Logits/BiasAdd:0")
+            logits = tf.get_default_graph().get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/batchnorm/add_1:0")
             classifier = tf.argmax(logits, 1)[0]
             
             for file in old_file_list:
