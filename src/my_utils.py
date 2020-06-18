@@ -73,12 +73,19 @@ def write_pairs(pairs_txt, list_same, list_diff):
             file.write(pair_str)
             file.write('\n')
 
+def make_dirs(root, name, num):
+    for i in range(1, num + 1):
+        dir_name = name + '%04d' % int(i)
+        dir_path = os.path.join(root, dir_name)
+        if not os.path.isdir(dir_path):
+            os.makedirs(dir_path)
+
 def rename_files(file_dir, name):
     file_list = os.listdir(file_dir)
     file_num = len(file_list)
     for index in range(1, file_num + 1):
         orig_file_path = os.path.join(file_dir, file_list[index - 1])
-        dest_file_path = os.path.join(file_dir, name + '_' + '%06d' % int(index))
+        dest_file_path = os.path.join(file_dir, name + '_' + '%06d' % int(index) + '.png')
         os.rename(orig_file_path, dest_file_path)
 
 def remove_files(file_dir):
@@ -91,55 +98,25 @@ def remove_files(file_dir):
 
 # ================================================================================================
 
-def test_str():
-    str1 = 'ni_'
-    str2 = 'hao\t'
-    str1 += str2
-    str1 = str1.strip()
-    print(str1)
-    None
+def test_dir():
+    root = './'
+    name = 'good_'
+    make_dirs(root, name, 10)
 
-def test_shuffle():
-    list1 = [1, 2, 3, 4, 5]
-    print(len(list1))
-    print(list1)
-    np.random.shuffle(list1)
-    print(list1)
-    np.random.shuffle(list1)
-    print(list1)
-    None
-
-def test_set():
-#     list1 = [('s1', 1), ('s2', 2)]
-#     set1 = set(list1)
-    set1 = set([])
-    i = 1
-    while(len(set1) < 3):
-        set1.add(i)
-        i += 1
-        None
-    
-    print(set1)
-#     set1.add(('s1', 1))
-#     print(set1)
-#     set1.add(('s3', 3))
-#     print(set1)
-#     print(len(set1))
-#     print(list(set1))
-    None
 
 # ================================================================================================
 
 if __name__ == '__main__':
+    test_dir()
 #     test_str()
 #     test_shuffle()
 
-    pairs_txt = '../data/my_pairs.txt'
-    data_dir = '../data/lfw_mtcnn_224'
-    same_num = 3
-    diff_num = 3
-    list_same, list_diff = make_pairs(data_dir, same_num, diff_num)
-    write_pairs(pairs_txt, list_same, list_diff)
+#     pairs_txt = '../data/my_pairs.txt'
+#     data_dir = '../data/lfw_mtcnn_224'
+#     same_num = 3
+#     diff_num = 3
+#     list_same, list_diff = make_pairs(data_dir, same_num, diff_num)
+#     write_pairs(pairs_txt, list_same, list_diff)
     
     print('____End____')
 

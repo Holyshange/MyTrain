@@ -332,36 +332,37 @@ def save_variables_and_metagraph(sess, saver, step, model_dir, model_name):
     print('Saving variables......')
     saver.save(sess, ckpt_file, global_step=step, write_meta_graph=False)
 
-def load_model(sess, model_dir, input_map=None):
+def load_model(model_dir, input_map=None):
     print('Model directory: %s' % model_dir)
-    meta_file, ckpt_file = get_meta_file_and_ckpt_file(model_dir)
+    meta_file, ckpt_file = get_model_filenames(model_dir)
     print('Metagraph file: %s' % meta_file)
     print('Checkpoint file: %s' % ckpt_file)
     saver = tf.train.import_meta_graph(os.path.join(model_dir, meta_file), input_map=input_map)
-    saver.restore(sess, os.path.join(model_dir, ckpt_file))
-
-def get_meta_file_and_ckpt_file(model_dir):
+    saver.restore(tf.get_default_session(), os.path.join(model_dir, ckpt_file))
+    
+def get_model_filenames(model_dir):
     files = os.listdir(model_dir)
     meta_files = [s for s in files if s.endswith('.meta')]
     if len(meta_files)==0:
         raise ValueError('No meta file found in the model directory (%s)' % model_dir)
     elif len(meta_files)>1:
-        raise ValueError('There should not be more than one meta file in the model directory (%s)' % 
-                         model_dir)
+        raise ValueError('There should not be more than one meta file in the model directory (%s)' % model_dir)
     meta_file = meta_files[0]
-    
+    ckpt = tf.train.get_checkpoint_state(model_dir)
+    if ckpt and ckpt.model_checkpoint_path:
+        ckpt_file = os.path.basename(ckpt.model_checkpoint_path)
+        return meta_file, ckpt_file
+
     ckpt_files = [s for s in files if '.ckpt' in s]
     max_step = -1
     for f in ckpt_files:
-        step_str = re.match(r'(^model_[\w\- ]+.ckpt-(\d+))', f)
+        step_str = re.match(r'(^model-[\w\- ]+.ckpt-(\d+))', f)
         if step_str is not None and len(step_str.groups())>=2:
             step = int(step_str.groups()[1])
             if step > max_step:
                 max_step = step
                 ckpt_file = step_str.groups()[0]
     return meta_file, ckpt_file
-
-# ================================================================================================
 
 def my_net(images, embedding_size, image_height, image_width):
     with tf.name_scope('reshape'):
