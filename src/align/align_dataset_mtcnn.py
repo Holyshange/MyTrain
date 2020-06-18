@@ -114,8 +114,6 @@ def main(input_dir, output_dir, image_size, margin, random_order, detect_multipl
                             
     print('Total number of images: %d' % nrof_images_total)
     print('Number of successfully aligned images: %d' % nrof_successfully_aligned)
-            
-
 
 if __name__ == '__main__':
     input_dir = '../../data/lfw'
@@ -125,7 +123,6 @@ if __name__ == '__main__':
     random_order = True
     detect_multiple_faces = False
     gpu_memory_fraction = 0.95
-    
     main(input_dir, output_dir, image_size, margin, random_order, detect_multiple_faces, 
          gpu_memory_fraction)
 
