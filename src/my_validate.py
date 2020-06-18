@@ -12,6 +12,33 @@ from src import my_train
 
 # ================================================================================================
 
+def my_classifier(old_dir, new_dir, model_dir, image_width, image_height):
+    old_file_list = os.listdir(old_dir)
+    with tf.Graph().as_default():
+        with tf.Session() as sess:
+            my_train.load_model(model_dir)
+            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+            logits = tf.get_default_graph().get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/batchnorm/add_1:0")
+            classifier = tf.argmax(logits, 1)[0]
+            
+            for file in old_file_list:
+                if not (file.endswith('.png') | file.endswith('.bmp')):
+                    continue
+                file_path = os.path.join(old_dir, file)
+                images = get_images(file_path, image_width, image_height)
+                feed_dict = {images_placeholder: images, phase_train_placeholder: False}
+                num = sess.run(classifier, feed_dict=feed_dict)
+                dir_name = 'class_' + '%04d' % int(num)
+                new_dir_2 = os.path.join(new_dir, dir_name)
+                if not os.path.isdir(new_dir_2):
+                    os.makedirs(new_dir_2)
+                new_file_path = os.path.join(new_dir_2, file)
+                print(new_file_path)
+                shutil.move(file_path, new_file_path)
+
+# ================================================================================================
+
 def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batch_size, 
                   gpu_memory_fraction):
     
@@ -66,8 +93,6 @@ def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batc
             accuracy_, threshold_ = my_train.get_accuracy_and_threshold(emb_array, issame_list)
             print("Accuracy: %2.3f\nThreshold: %2.3f" % (np.mean(accuracy_), threshold_))
 
-# ================================================================================================
-
 def get_variables(image_path_list, model_dir, image_width, image_height):
 #     image_path_array = np.array(image_path_list)
     with tf.Graph().as_default():
@@ -93,28 +118,6 @@ def get_variable_names(checkpoint_path, file_name):
         for key in var_to_shape_map:
             file.write(key)
             file.write('\n')
-
-def my_classifier(old_dir, new_dir, model_dir, image_width, image_height):
-    old_file_list = os.listdir(old_dir)
-    with tf.Graph().as_default():
-        with tf.Session() as sess:
-            my_train.load_model(model_dir)
-            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-            logits = tf.get_default_graph().get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/batchnorm/add_1:0")
-            classifier = tf.argmax(logits, 1)[0]
-            
-            for file in old_file_list:
-                file_path = os.path.join(old_dir, file)
-                images = get_images(file_path, image_width, image_height)
-                feed_dict = {images_placeholder: images, phase_train_placeholder: False}
-                num = sess.run(classifier, feed_dict=feed_dict)
-                dir_name = 'class_' + '%06d' % int(num)
-                new_dir_2 = os.path.join(new_dir, dir_name)
-                if not os.path.isdir(new_dir_2):
-                    os.makedirs(new_dir_2)
-                new_file_path = os.path.join(new_dir_2, file)
-                shutil.move(file_path, new_file_path)
 
 def get_all_nodes(model_dir):
     with tf.Graph().as_default():
