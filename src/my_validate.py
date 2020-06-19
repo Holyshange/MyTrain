@@ -36,19 +36,25 @@ def my_classifier(old_dir, new_dir, model_dir, image_width, image_height):
                 print(new_dir_2)
                 shutil.move(image_path, new_image_path)
 
-def get_embeddings(image_path_list, model_dir, image_height, image_width):
+def get_model_speed(data_dir, model_dir, image_height, image_width):
+    data_set = my_train.get_dataset(data_dir)
+    image_path_list, _ = my_train.get_image_path_and_label_list(data_set)
+    image_num = len(image_path_list)
+    total_time = 0.0
     with tf.Graph().as_default():
         with tf.Session() as sess:
             my_train.load_model(model_dir)
             images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
             phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-            
+            embeddings = tf.get_default_graph().get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/batchnorm/add_1:0")
             for image_path in image_path_list:
                 images = get_images(image_path, image_height, image_width)
                 feed_dict = {images_placeholder: images, phase_train_placeholder: False}
-                emb = sess.run(embeddings, feed_dict=feed_dict)
-                print(emb)
+                time_1 = time.time()
+                sess.run(embeddings, feed_dict=feed_dict)
+                time_2 = time.time()
+                total_time += (time_2 - time_1)
+            print("speed: %f" % (image_num / total_time))
 
 def get_images(image_path, image_height, image_width):
     image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
@@ -155,10 +161,9 @@ def run_validate():
 # ================================================================================================
 
 def run_test():
+    data_dir = '../data/lfw_mtcnn_224'
     model_dir = '../models/Inception_resnet_v1_20170512110547'
-    old_dir = '../data/old_dir'
-    new_dir = '../data/new_dir'
-    my_classifier(old_dir, new_dir, model_dir, 160, 160)
+    get_model_speed(data_dir, model_dir, 160, 160)
 
 if __name__ == '__main__':
 #     run_validate()
