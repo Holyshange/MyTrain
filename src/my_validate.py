@@ -11,6 +11,51 @@ from src import my_train
 
 # ================================================================================================
 
+def get_images(image_path_list, image_height, image_width):
+    image_list = []
+    for image_path in image_path_list:
+        image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        image = cv2.resize(image, (image_width, image_height))
+#         cv2.imshow('', image)
+#         cv2.waitKey(0)
+        prewhitened = my_train.prewhiten_image(image)
+        image_list.append(prewhitened)
+    images = np.stack(image_list)
+    return images
+
+def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
+    data_set = my_train.get_dataset(data_dir)
+    image_path_list, _ = my_train.get_image_path_and_label_list(data_set)
+    np.random.shuffle(image_path_list)
+    image_path_array = np.array(image_path_list)
+    total_image_num = len(image_path_list)
+    batch_num = total_image_num // batch_size
+    test_image_num = batch_size * batch_num
+    total_time = 0.0
+    
+    with tf.Graph().as_default():
+        with tf.Session() as sess:
+            my_train.load_model(model_dir)
+            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+            embeddings = tf.get_default_graph().get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/batchnorm/add_1:0")
+            
+            for i_batch in range(batch_num):
+                index_array = np.array(range(batch_size * i_batch, batch_size * (i_batch + 1)))
+                image_path_batch = image_path_array(index_array)
+                images = get_images(image_path_batch, image_height, image_width)
+                feed_dict = {images_placeholder: images, phase_train_placeholder: False}
+                time_1 = time.time()
+                sess.run(embeddings, feed_dict=feed_dict)
+                time_2 = time.time()
+                print('.')
+            total_time += (time_2 - time_1)
+            print("Total image number: %d" % total_image_num)
+            print("Test image number: %d" % test_image_num)
+            print("speed: %f" % (test_image_num / total_time))
+
+# ================================================================================================
+
 def my_classifier(old_dir, new_dir, model_dir, image_width, image_height):
     old_file_list = os.listdir(old_dir)
     with tf.Graph().as_default():
@@ -36,38 +81,6 @@ def my_classifier(old_dir, new_dir, model_dir, image_width, image_height):
                 print(new_dir_2)
                 shutil.move(image_path, new_image_path)
 
-def get_model_speed(data_dir, model_dir, image_height, image_width):
-    data_set = my_train.get_dataset(data_dir)
-    image_path_list, _ = my_train.get_image_path_and_label_list(data_set)
-    image_num = len(image_path_list)
-    total_time = 0.0
-    with tf.Graph().as_default():
-        with tf.Session() as sess:
-            my_train.load_model(model_dir)
-            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-            embeddings = tf.get_default_graph().get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/batchnorm/add_1:0")
-            for image_path in image_path_list:
-                images = get_images(image_path, image_height, image_width)
-                feed_dict = {images_placeholder: images, phase_train_placeholder: False}
-                time_1 = time.time()
-                sess.run(embeddings, feed_dict=feed_dict)
-                time_2 = time.time()
-                total_time += (time_2 - time_1)
-            print("speed: %f" % (image_num / total_time))
-
-def get_images(image_path, image_height, image_width):
-    image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-#     cv2.imshow('', image)
-#     cv2.waitKey(0)
-    image = cv2.resize(image, (image_width, image_height))
-#     cv2.imshow('', image)
-#     cv2.waitKey(0)
-    prewhitened = my_train.prewhiten_image(image)
-    images = np.stack([prewhitened])
-#     print(np.shape(images))
-    return images
-
 def get_trainable_variables(model_dir):
     with tf.Graph().as_default():
         with tf.Session() as sess:
@@ -90,8 +103,6 @@ def get_trainable_variables(model_dir):
                 for el in all_ops:
                     file.write(el.name)
                     file.write('\n')
-
-# ================================================================================================
 
 def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batch_size, 
                   gpu_memory_fraction):
@@ -147,6 +158,22 @@ def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batc
             accuracy_, threshold_ = my_train.get_accuracy_and_threshold(emb_array, issame_list)
             print("Accuracy: %2.3f\nThreshold: %2.3f" % (np.mean(accuracy_), threshold_))
 
+# ================================================================================================
+
+def test_code():
+    for i_batch in range(10):
+        index_array = np.array(range(10 * i_batch, 10 * (i_batch + 1)))
+        print(index_array)
+
+def test_get_images():
+    data_dir = '../data/test_data'
+    data_set = my_train.get_dataset(data_dir)
+    image_path_list, _ = my_train.get_image_path_and_label_list(data_set)
+    get_images(image_path_list, 160, 160)
+    None
+
+# ================================================================================================
+
 def run_validate():
     lfw_dir = '../data/lfw_mtcnn_224'
     pairs_txt = '../data/pairs.txt'
@@ -158,16 +185,16 @@ def run_validate():
     validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, 
                   batch_size, gpu_memory_fraction)
 
-# ================================================================================================
-
 def run_test():
     data_dir = '../data/lfw_mtcnn_224'
     model_dir = '../models/Inception_resnet_v1_20170512110547'
     get_model_speed(data_dir, model_dir, 160, 160)
 
 if __name__ == '__main__':
+    test_code()
+#     test_get_images()
 #     run_validate()
-    run_test()
+#     run_test()
     print('____End____')
 
 
