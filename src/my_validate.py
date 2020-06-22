@@ -42,7 +42,7 @@ def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
             
             for i_batch in range(batch_num):
                 index_array = np.array(range(batch_size * i_batch, batch_size * (i_batch + 1)))
-                image_path_batch = image_path_array(index_array)
+                image_path_batch = image_path_array[index_array]
                 images = get_images(image_path_batch, image_height, image_width)
                 feed_dict = {images_placeholder: images, phase_train_placeholder: False}
                 time_1 = time.time()
