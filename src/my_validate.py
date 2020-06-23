@@ -31,7 +31,6 @@ def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
     total_image_num = len(image_path_list)
     batch_num = total_image_num // batch_size
     test_image_num = batch_size * batch_num
-    total_time = 0.0
     
     with tf.Graph().as_default():
         with tf.Session() as sess:
@@ -40,19 +39,18 @@ def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
             phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
             embeddings = tf.get_default_graph().get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/batchnorm/add_1:0")
             
+            time_1 = time.time()
             for i_batch in range(batch_num):
                 index_array = np.array(range(batch_size * i_batch, batch_size * (i_batch + 1)))
                 image_path_batch = image_path_array[index_array]
                 images = get_images(image_path_batch, image_height, image_width)
                 feed_dict = {images_placeholder: images, phase_train_placeholder: False}
-                time_1 = time.time()
                 sess.run(embeddings, feed_dict=feed_dict)
-                time_2 = time.time()
-                print('.')
-            total_time += (time_2 - time_1)
+            time_2 = time.time()
+            total_time = (time_2 - time_1)
             print("Total image number: %d" % total_image_num)
             print("Test image number: %d" % test_image_num)
-            print("speed: %f" % (test_image_num / total_time))
+            print("Total time: %f" % total_time)
 
 # ================================================================================================
 
