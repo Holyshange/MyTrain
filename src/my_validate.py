@@ -54,8 +54,8 @@ def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
 
 # ================================================================================================
 
-def my_classifier(old_dir, new_dir, model_dir, image_width, image_height):
-    old_file_list = os.listdir(old_dir)
+def my_classifier(old_dir, new_dir, model_dir, image_height, image_width):
+    file_list = os.listdir(old_dir)
     with tf.Graph().as_default():
         with tf.Session() as sess:
             my_train.load_model(model_dir)
@@ -64,11 +64,11 @@ def my_classifier(old_dir, new_dir, model_dir, image_width, image_height):
             logits = tf.get_default_graph().get_tensor_by_name("InceptionResnetV1/Bottleneck/BatchNorm/batchnorm/add_1:0")
             classifier = tf.argmax(logits, 1)[0]
             
-            for file in old_file_list:
+            for file in file_list:
                 if not (file.endswith('.png') | file.endswith('.bmp')):
                     continue
                 image_path = os.path.join(old_dir, file)
-                images = get_images(image_path, image_height, image_width)
+                images = get_images([image_path], image_height, image_width)
                 feed_dict = {images_placeholder: images, phase_train_placeholder: False}
                 num = sess.run(classifier, feed_dict=feed_dict)
                 dir_name = 'class_' + '%04d' % int(num)
@@ -184,15 +184,17 @@ def run_validate():
                   batch_size, gpu_memory_fraction)
 
 def run_test():
-    data_dir = '../data/lfw_mtcnn_224'
+    old_dir = '../data/my_data2'
+    new_dir = '../data/my_data'
     model_dir = '../models/Inception_resnet_v1_20170512110547'
-    get_model_speed(data_dir, model_dir, 160, 160)
+    my_classifier(old_dir, new_dir, model_dir, 160, 160)
+#     get_model_speed(data_dir, model_dir, 160, 160)
 
 if __name__ == '__main__':
-    test_code()
+#     test_code()
 #     test_get_images()
 #     run_validate()
-#     run_test()
+    run_test()
     print('____End____')
 
 

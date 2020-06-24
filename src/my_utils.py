@@ -1,5 +1,9 @@
 import os
 import numpy as np
+import imageio
+import cv2
+import math
+from src import my_train
 
 # ================================================================================================
 
@@ -96,27 +100,51 @@ def remove_files(file_dir):
             if os.path.isfile(file):
                 os.remove(file_path)
 
+def format_image(file_dir, file_dir_2):
+    file_list = os.listdir(file_dir)
+    for file_name in file_list:
+        file_path = os.path.join(file_dir, file_name)
+        if os.path.isdir(file_path):
+            continue
+        portion = os.path.splitext(file_name)
+        newname = portion[0] + ".bmp"
+        file_path_2 = os.path.join(file_dir_2, newname)
+        image = imageio.imread(file_path)
+        imageio.imwrite(file_path_2, image)
+
+def brighten_image(image):
+    image = np.array(image)
+    shape = np.shape(image)
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            for k in range(shape[2]):
+                l1 = image[i][j][k]
+                l2 = int(255 * math.pow((l1 / 255), 0.8) + 0.5)
+                image[i][j][k] = l2
+    return image
+
+def change_light(file_dir, file_dir2):
+    file_list = os.listdir(file_dir)
+    for file in file_list:
+        file_path = os.path.join(file_dir, file)
+        if os.path.isdir(file_path):
+            continue
+        file_path2 = os.path.join(file_dir2, file)
+        image = cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
+        image = brighten_image(image)
+        cv2.imwrite(file_path2, image)
+
 # ================================================================================================
 
-def test_dir():
-    root = './'
-    name = 'good_'
-    make_dirs(root, name, 10)
-
+def test_code():
+    file_dir = '../data/my_data/black'
+    file_dir2 = '../data/my_data2/black'
+    change_light(file_dir, file_dir2)
 
 # ================================================================================================
 
 if __name__ == '__main__':
-    test_dir()
-#     test_str()
-#     test_shuffle()
-
-#     pairs_txt = '../data/my_pairs.txt'
-#     data_dir = '../data/lfw_mtcnn_224'
-#     same_num = 3
-#     diff_num = 3
-#     list_same, list_diff = make_pairs(data_dir, same_num, diff_num)
-#     write_pairs(pairs_txt, list_same, list_diff)
+    test_code()
     
     print('____End____')
 
