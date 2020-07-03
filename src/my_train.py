@@ -432,21 +432,21 @@ def bias_variable(shape):
     return tf.Variable(initial)
 
 def run_train():
-#     data_dir = '../data/VGGFace2_mtcnn_224'
-    data_dir = '../data/lfw_mtcnn_224'
+    data_dir = '../data/VGGFace2_mtcnn_224'
+#     data_dir = '../data/lfw_mtcnn_224'
     lfw_dir = '../data/lfw_mtcnn_224'
     pairs_txt = '../data/pairs.txt'
     model_root = '../data/models'
     model_name = "my_net"
 #     model_name = "mobilenet_v1"
     learning_rate_init = 0.05
-    learning_rate_decay_epochs = 100
+    learning_rate_decay_epochs = 50
     optimize_method = 'ADAM'
     image_height = 224
     image_width = 224
-    batch_size = 100
+    batch_size = 50
     epoch_size = 1000
-    max_epochs = 2
+    max_epochs = 140
     embedding_size = 1000
     weight_decay = 0.0005
     pretrained_model = None

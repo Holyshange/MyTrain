@@ -8,20 +8,9 @@ import tensorflow as tf
 from tensorflow.python import pywrap_tensorflow
 
 from src import my_train
+from src import my_utils
 
 # ================================================================================================
-
-def get_images(image_path_list, image_height, image_width):
-    image_list = []
-    for image_path in image_path_list:
-        image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-        image = cv2.resize(image, (image_width, image_height))
-#         cv2.imshow('', image)
-#         cv2.waitKey(0)
-        prewhitened = my_train.prewhiten_image(image)
-        image_list.append(prewhitened)
-    images = np.stack(image_list)
-    return images
 
 def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
     data_set = my_train.get_dataset(data_dir)
@@ -43,7 +32,7 @@ def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
             for i_batch in range(batch_num):
                 index_array = np.array(range(batch_size * i_batch, batch_size * (i_batch + 1)))
                 image_path_batch = image_path_array[index_array]
-                images = get_images(image_path_batch, image_height, image_width)
+                images = my_utils.get_images(image_path_batch, image_height, image_width)
                 feed_dict = {images_placeholder: images, phase_train_placeholder: False}
                 sess.run(embeddings, feed_dict=feed_dict)
             time_2 = time.time()
@@ -68,7 +57,7 @@ def my_classifier(old_dir, new_dir, model_dir, image_height, image_width):
                 if not (file.endswith('.png') | file.endswith('.bmp')):
                     continue
                 image_path = os.path.join(old_dir, file)
-                images = get_images([image_path], image_height, image_width)
+                images = my_utils.get_images([image_path], image_height, image_width)
                 feed_dict = {images_placeholder: images, phase_train_placeholder: False}
                 num = sess.run(classifier, feed_dict=feed_dict)
                 dir_name = 'class_' + '%04d' % int(num)
@@ -136,9 +125,9 @@ def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batc
         tf.train.start_queue_runners(coord=coord, sess=sess)
         with sess.as_default():
             my_train.load_model(model_dir, input_map=input_map)
-            
-            prelogits = tf.get_default_graph().get_tensor_by_name("prelogits:0")
-            embeddings = tf.nn.l2_normalize(prelogits, 1, 1e-10, name='embeddings')
+            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+#             prelogits = tf.get_default_graph().get_tensor_by_name("prelogits:0")
+#             embeddings = tf.nn.l2_normalize(prelogits, 1, 1e-10, name='embeddings')
             embedding_size = int(embeddings.get_shape()[1])
             
             sess.run(eval_enqueue_op, {image_paths_placeholder: lfw_path_array, 
@@ -167,17 +156,17 @@ def test_get_images():
     data_dir = '../data/test_data'
     data_set = my_train.get_dataset(data_dir)
     image_path_list, _ = my_train.get_image_path_and_label_list(data_set)
-    get_images(image_path_list, 160, 160)
+    my_utils.get_images(image_path_list, 160, 160)
     None
 
 # ================================================================================================
 
 def run_validate():
-    lfw_dir = '../data/lfw_mtcnn_224'
-    pairs_txt = '../data/pairs.txt'
-    model_dir = ''
-    image_height = 224
-    image_width = 224
+    lfw_dir = '../data/my_data_160'
+    pairs_txt = '../data/my_pairs.txt'
+    model_dir = '../models/Inception_resnet_v1_20170512110547'
+    image_height = 160
+    image_width = 160
     batch_size = 100
     gpu_memory_fraction = 0.95
     validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, 
@@ -193,8 +182,8 @@ def run_test():
 if __name__ == '__main__':
 #     test_code()
 #     test_get_images()
-#     run_validate()
-    run_test()
+    run_validate()
+#     run_test()
     print('____End____')
 
 

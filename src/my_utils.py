@@ -7,6 +7,31 @@ from src import my_train
 
 # ================================================================================================
 
+def get_images(image_path_list, image_height, image_width):
+    image_list = []
+    for image_path in image_path_list:
+        image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        image = cv2.resize(image, (image_width, image_height))
+#         cv2.imshow('', image)
+#         cv2.waitKey(0)
+        prewhitened = my_train.prewhiten_image(image)
+        image_list.append(prewhitened)
+    images = np.stack(image_list)
+    return images
+
+def resize_images(data_dir, image_height, image_width):
+    data_set = my_train.get_dataset(data_dir)
+    image_path_list, _ = my_train.get_image_path_and_label_list(data_set)
+    for image_path in image_path_list:
+        iamge_path2 = image_path.replace("my_data", "my_data_160")
+        file_dir2, _ = os.path.split(os.path.realpath(iamge_path2))
+        if not os.path.isdir(file_dir2):
+            os.makedirs(file_dir2)
+        image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        image = cv2.resize(image, (image_width, image_height))
+        cv2.imwrite(iamge_path2, image)
+    None
+
 def make_pairs(data_dir, same_num, diff_num):
     set_same = set([])
     set_diff = set([])
@@ -89,7 +114,7 @@ def rename_files(file_dir, name):
     file_num = len(file_list)
     for index in range(1, file_num + 1):
         orig_file_path = os.path.join(file_dir, file_list[index - 1])
-        dest_file_path = os.path.join(file_dir, name + '_' + '%06d' % int(index) + '.png')
+        dest_file_path = os.path.join(file_dir, name + '_' + '%04d' % int(index) + '.png')
         os.rename(orig_file_path, dest_file_path)
 
 def remove_files(file_dir):
@@ -136,15 +161,24 @@ def change_light(file_dir, file_dir2):
 
 # ================================================================================================
 
+def test_rep():
+    data_dir = '../data/my_data'
+    resize_images(data_dir, 160, 160)
+    None
+
 def test_code():
-    file_dir = '../data/my_data/black'
-    file_dir2 = '../data/my_data2/black'
-    change_light(file_dir, file_dir2)
+    data_dir = '../data/my_data'
+    dir_list = os.listdir(data_dir)
+    for dir_name in dir_list:
+        dir_path = os.path.join(data_dir, dir_name)
+        rename_files(dir_path, dir_name)
+    None
 
 # ================================================================================================
 
 if __name__ == '__main__':
-    test_code()
+#     test_code()
+    test_rep()
     
     print('____End____')
 
