@@ -6,6 +6,8 @@ from datetime import datetime
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
+from src.nets import mobilenet_v1
+
 # ================================================================================================
 
 def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, epoch_size, 
@@ -42,7 +44,6 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
         index_queue = tf.train.range_input_producer(total_image_num, num_epochs=None, 
                                                     shuffle=True, seed=None, capacity=32)
         index_dequeue_op = index_queue.dequeue_many(batch_size*epoch_size, 'index_dequeue')
-
         input_queue = tf.FIFOQueue(capacity=2000000, 
                                    dtypes=[tf.string, tf.int32], 
                                    shapes=[(1,), (1,)], 
@@ -58,9 +59,10 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
         print('Number of classes in training set: %d' % category_num)
         print('Number of samples in training set: %d' % total_image_num)
         print('Building training graph')
-
-#         prelogits, _ = mobilenet_v1.inference(image_batch)
-        prelogits = my_net(image_batch, embedding_size, image_height, image_width)
+        
+#         prelogits = my_net(image_batch, embedding_size, image_height, image_width)
+        mobilenet = mobilenet_v1.MobileNet(image_batch, num_classes=embedding_size)
+        prelogits = mobilenet.logits
         prelogits = tf.identity(prelogits, 'prelogits')
         
         logits = slim.fully_connected(prelogits, 
@@ -432,21 +434,21 @@ def bias_variable(shape):
     return tf.Variable(initial)
 
 def run_train():
-    data_dir = '../data/VGGFace2_mtcnn_224'
-#     data_dir = '../data/lfw_mtcnn_224'
+#     data_dir = '../data/VGGFace2_mtcnn_224'
+    data_dir = '../data/lfw_mtcnn_224'
     lfw_dir = '../data/lfw_mtcnn_224'
     pairs_txt = '../data/pairs.txt'
-    model_root = '../data/models'
-    model_name = "my_net"
-#     model_name = "mobilenet_v1"
+    model_root = '../models'
+#     model_name = "my_net"
+    model_name = "mobilenet_v1"
     learning_rate_init = 0.05
-    learning_rate_decay_epochs = 50
+    learning_rate_decay_epochs = 100
     optimize_method = 'ADAM'
     image_height = 224
     image_width = 224
-    batch_size = 50
+    batch_size = 100
     epoch_size = 1000
-    max_epochs = 140
+    max_epochs = 280
     embedding_size = 1000
     weight_decay = 0.0005
     pretrained_model = None
