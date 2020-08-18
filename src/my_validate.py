@@ -124,43 +124,52 @@ def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batc
 
 #============================================================
 
-def get_trainable_variables(model_dir):
+def get_trainable_variables(model_dir, model_name):
+    file_name = "../data/variables/" + model_name + "_trainable_variables.txt"
+    
     with tf.Graph().as_default():
         with tf.Session() as sess:
             my_train.load_model(model_dir)
             variable_names = [v.name for v in tf.trainable_variables()]
-            with open('../data/trainable_variables.txt', 'w') as file:
-                values = sess.run(variable_names)
-                i=0
+            values = sess.run(variable_names)
+            with open(file_name, 'w') as file:
                 for k, v in zip(variable_names, values):
-                    i+=1
-                    if k.find('encode') != -1:
-                        file.write("Variable: ", k)
-                        file.write('\n')
-                        file.write("Shape: ", v.shape)
-                        file.write('\n')
-                        file.write(v)
-                        file.write('\n')
-                graph = tf.get_default_graph()
-                all_ops = graph.get_operations()
-                for el in all_ops:
-                    file.write(el.name)
+                    file.write(k)
                     file.write('\n')
 
-# MobileNet/conv_1/filter
-# MobileNet/conv_1/bn/gamma
+
+def get_weights_2(model_dir):
+#     line = "InceptionResnetV1/Conv2d_1a_3x3/BatchNorm/moving_mean/read"
+    line = "MobileNet/AssignMovingAvg/MobileNet/conv_1/bn/moving_mean/read"
+    
+    line_0 = line + ":0"
+    with tf.Graph().as_default():
+        with tf.Session() as sess:
+            my_train.load_model(model_dir)
+#             batch_size_placeholder = tf.get_default_graph().get_tensor_by_name("batch_size:0")
+#             phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+#             feed_dict = {batch_size_placeholder: 1, phase_train_placeholder: False}
+            weights = tf.get_default_graph().get_tensor_by_name(line_0)
+            print(sess.run(weights))
+    None
+
 def get_weights(model_dir):
     file_lines = []
     with open('../data/mobilenet_v1_weights/mobilenet_v1_variables.txt','r') as f:
         for i in f.readlines():
             file_lines.append(i.strip())
+    print(file_lines)
+    
     with tf.Graph().as_default():
         with tf.Session() as sess:
             my_train.load_model(model_dir)
             for line in file_lines:
-                line_name = line.replace("/","_")
+                line_0 = line + ":0"
+                print(line_0)
+                line_name = line.replace("/", "_")
+                line_name = line_name.replace("_read", "")
                 file_name = '../data/mobilenet_v1_weights/' + line_name + '.txt'
-                weights = tf.get_default_graph().get_tensor_by_name(line+":0")
+                weights = tf.get_default_graph().get_tensor_by_name(line_0)
                 shape = weights.get_shape().as_list()
                 shape_len = len(shape)
                 with open(file_name, 'w') as file:
@@ -182,8 +191,10 @@ def get_weights(model_dir):
                                 file.write('\n')
                     elif shape_len == 1:
                         [output] = shape
+                        print(output)
+                        print(sess.run(weights))
                         for n in range(output):
-                            weight = weights[n].eval()
+                            weight = sess.run(weights[n])
                             file.write(str(weight))
                             file.write('\n')
     None
@@ -202,9 +213,12 @@ def run_validate():
                   batch_size, gpu_memory_fraction)
 
 if __name__ == '__main__':
+#     model_dir = '../models/Inception_resnet_v1_20170512110547'
     model_dir = '../models/mobilenet_v1_20200707123403'
-    get_weights(model_dir)
-#     get_trainable_variables(model_dir)
+    model_name = "mobilenet_v1"
+    
+#     get_weights_2(model_dir)
+    get_trainable_variables(model_dir, model_name)
 #     test_code()
 #     test_get_images()
 #     run_validate()
