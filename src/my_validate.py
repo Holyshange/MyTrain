@@ -1,16 +1,16 @@
 import os
 import shutil
 import sys
-import cv2
+# import cv2
 import time
 import numpy as np
 import tensorflow as tf
-from tensorflow.python import pywrap_tensorflow
+# from tensorflow.python import pywrap_tensorflow
 
 from src import my_train
 from src import my_utils
 
-# ================================================================================================
+#============================================================
 
 def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
     data_set = my_train.get_dataset(data_dir)
@@ -41,7 +41,7 @@ def get_model_speed(data_dir, model_dir, image_height, image_width, batch_size):
             print("Test image number: %d" % test_image_num)
             print("Total time: %f" % total_time)
 
-# ================================================================================================
+#============================================================
 
 def my_classifier(old_dir, new_dir, model_dir, image_height, image_width):
     file_list = os.listdir(old_dir)
@@ -67,29 +67,6 @@ def my_classifier(old_dir, new_dir, model_dir, image_height, image_width):
                 new_image_path = os.path.join(new_dir_2, file)
                 print(new_dir_2)
                 shutil.move(image_path, new_image_path)
-
-def get_trainable_variables(model_dir):
-    with tf.Graph().as_default():
-        with tf.Session() as sess:
-            my_train.load_model(model_dir)
-            variable_names = [v.name for v in tf.trainable_variables()]
-            with open('../data/trainable_variables.txt', 'w') as file:
-                values = sess.run(variable_names)
-                i=0
-                for k, v in zip(variable_names, values):
-                    i+=1
-                    if k.find('encode') != -1:
-                        file.write("Variable: ", k)
-                        file.write('\n')
-                        file.write("Shape: ", v.shape)
-                        file.write('\n')
-                        file.write(v)
-                        file.write('\n')
-                graph = tf.get_default_graph()
-                all_ops = graph.get_operations()
-                for el in all_ops:
-                    file.write(el.name)
-                    file.write('\n')
 
 def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batch_size, 
                   gpu_memory_fraction):
@@ -145,21 +122,73 @@ def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batc
             accuracy_, threshold_ = my_train.get_accuracy_and_threshold(emb_array, issame_list)
             print("Accuracy: %2.3f\nThreshold: %2.3f" % (np.mean(accuracy_), threshold_))
 
-# ================================================================================================
+#============================================================
 
-def test_code():
-    for i_batch in range(10):
-        index_array = np.array(range(10 * i_batch, 10 * (i_batch + 1)))
-        print(index_array)
+def get_trainable_variables(model_dir):
+    with tf.Graph().as_default():
+        with tf.Session() as sess:
+            my_train.load_model(model_dir)
+            variable_names = [v.name for v in tf.trainable_variables()]
+            with open('../data/trainable_variables.txt', 'w') as file:
+                values = sess.run(variable_names)
+                i=0
+                for k, v in zip(variable_names, values):
+                    i+=1
+                    if k.find('encode') != -1:
+                        file.write("Variable: ", k)
+                        file.write('\n')
+                        file.write("Shape: ", v.shape)
+                        file.write('\n')
+                        file.write(v)
+                        file.write('\n')
+                graph = tf.get_default_graph()
+                all_ops = graph.get_operations()
+                for el in all_ops:
+                    file.write(el.name)
+                    file.write('\n')
 
-def test_get_images():
-    data_dir = '../data/test_data'
-    data_set = my_train.get_dataset(data_dir)
-    image_path_list, _ = my_train.get_image_path_and_label_list(data_set)
-    my_utils.get_images(image_path_list, 160, 160)
+# MobileNet/conv_1/filter
+# MobileNet/conv_1/bn/gamma
+def get_weights(model_dir):
+    file_lines = []
+    with open('../data/mobilenet_v1_weights/mobilenet_v1_variables.txt','r') as f:
+        for i in f.readlines():
+            file_lines.append(i.strip())
+    with tf.Graph().as_default():
+        with tf.Session() as sess:
+            my_train.load_model(model_dir)
+            for line in file_lines:
+                line_name = line.replace("/","_")
+                file_name = '../data/mobilenet_v1_weights/' + line_name + '.txt'
+                weights = tf.get_default_graph().get_tensor_by_name(line+":0")
+                shape = weights.get_shape().as_list()
+                shape_len = len(shape)
+                with open(file_name, 'w') as file:
+                    if shape_len == 4:
+                        [height, width, channel, output] = shape
+                        for h in range(height):
+                            for w in range(width):
+                                for c in range(channel):
+                                    for n in range(output):
+                                        weight = weights[h][w][c][n].eval()
+                                        file.write(str(weight))
+                                        file.write('\n')
+                    elif shape_len == 2:
+                        [height, width] = shape
+                        for h in range(height):
+                            for w in range(width):
+                                weight = weights[h][w].eval()
+                                file.write(str(weight))
+                                file.write('\n')
+                    elif shape_len == 1:
+                        [output] = shape
+                        for n in range(output):
+                            weight = weights[n].eval()
+                            file.write(str(weight))
+                            file.write('\n')
     None
 
-# ================================================================================================
+#============================================================
 
 def run_validate():
     lfw_dir = '../data/my_data_160'
@@ -172,17 +201,13 @@ def run_validate():
     validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, 
                   batch_size, gpu_memory_fraction)
 
-def run_test():
-    old_dir = '../data/my_data2'
-    new_dir = '../data/my_data'
-    model_dir = '../models/Inception_resnet_v1_20170512110547'
-    my_classifier(old_dir, new_dir, model_dir, 160, 160)
-#     get_model_speed(data_dir, model_dir, 160, 160)
-
 if __name__ == '__main__':
+    model_dir = '../models/mobilenet_v1_20200707123403'
+    get_weights(model_dir)
+#     get_trainable_variables(model_dir)
 #     test_code()
 #     test_get_images()
-    run_validate()
+#     run_validate()
 #     run_test()
     print('____End____')
 

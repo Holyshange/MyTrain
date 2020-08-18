@@ -8,11 +8,12 @@ import tensorflow.contrib.slim as slim
 
 from src.nets import mobilenet_v1
 
-# ================================================================================================
+#============================================================
 
-def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, epoch_size, 
-               max_epochs, image_height, image_width, embedding_size, weight_decay, optimize_method, 
-               pretrained_model, learning_rate_init, learning_rate_decay_epochs, gpu_memory_fraction):
+def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, 
+               epoch_size, max_epochs, image_height, image_width, embedding_size, 
+               weight_decay, optimize_method, pretrained_model, learning_rate_init, 
+               learning_rate_decay_epochs, gpu_memory_fraction):
     
     time_string = datetime.strftime(datetime.now(), '_%Y%m%d%H%M%S')
     subdir = model_name + time_string
@@ -24,7 +25,7 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
     image_path_list, label_list = get_image_path_and_label_list(train_set)
     category_num = len(train_set)
     total_image_num = len(image_path_list)
-
+    
     lfw_pairs = read_pairs(pairs_txt)
     lfw_path_list, issame_list = get_image_path_and_issame_list(lfw_dir, lfw_pairs)
     lfw_image_num = len(lfw_path_list)
@@ -161,7 +162,7 @@ def validate_epoch(sess, enqueue_op, prelogits, label_batch, lfw_path_array,
     accuracy_, _ = get_accuracy_and_threshold(emb_array, issame_list)
     print("Accuracy: %2.3f" % np.mean(accuracy_))
 
-# ================================================================================================
+#============================================================
 
 def get_file_path_list(file_dir):
     file_path_list = []
