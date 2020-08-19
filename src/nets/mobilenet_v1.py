@@ -8,10 +8,12 @@ from tensorflow.python.training import moving_averages
 UPDATE_OPS_COLLECTION = "_update_ops_"
 
 # create variable
-def create_variable(name, shape, initializer,
-    dtype=tf.float32, trainable=True):
-    return tf.get_variable(name, shape=shape, dtype=dtype, 
-                           initializer=initializer, trainable=trainable)
+def create_variable(name, shape, initializer, dtype=tf.float32, trainable=True):
+    return tf.get_variable(name, 
+                           shape=shape, 
+                           dtype=dtype, 
+                           initializer=initializer, 
+                           trainable=trainable)
 
 # batchnorm layer
 def bacthnorm(inputs, scope, epsilon=1e-05, momentum=0.99, is_training=True):
@@ -26,9 +28,9 @@ def bacthnorm(inputs, scope, epsilon=1e-05, momentum=0.99, is_training=True):
                                 initializer=tf.ones_initializer())
         # for inference
         moving_mean = create_variable("moving_mean", params_shape,
-                            initializer=tf.zeros_initializer(), trainable=False)
+                            initializer=tf.zeros_initializer())
         moving_variance = create_variable("moving_variance", params_shape,
-                            initializer=tf.ones_initializer(), trainable=False)
+                            initializer=tf.ones_initializer())
     if is_training:
         mean, variance = tf.nn.moments(inputs, axes=axis)
         update_move_mean = moving_averages.assign_moving_average(moving_mean,

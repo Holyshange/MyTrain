@@ -122,82 +122,58 @@ def validate_main(lfw_dir, pairs_txt, model_dir, image_height, image_width, batc
             accuracy_, threshold_ = my_train.get_accuracy_and_threshold(emb_array, issame_list)
             print("Accuracy: %2.3f\nThreshold: %2.3f" % (np.mean(accuracy_), threshold_))
 
-#============================================================
+def get_trainable_variable_names(model_dir, model_name):
+    file_name = "../data/variables/" + model_name + "_trainable_variable_names.txt"
+    with tf.Graph().as_default():
+        with tf.Session() as sess:
+            my_train.load_model(model_dir)
+            variable_names = [v.name for v in tf.trainable_variables()]
+            with open(file_name, 'w') as file:
+                for name in variable_names:
+                    file.write(name)
+                    file.write('\n')
 
-def get_trainable_variables(model_dir, model_name):
-    file_name = "../data/variables/" + model_name + "_trainable_variables.txt"
-    
+def get_trainable_weights(model_dir, model_name):
+    folder = os.path.join('../data/weights', model_name)
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
     with tf.Graph().as_default():
         with tf.Session() as sess:
             my_train.load_model(model_dir)
             variable_names = [v.name for v in tf.trainable_variables()]
             values = sess.run(variable_names)
-            with open(file_name, 'w') as file:
-                for k, v in zip(variable_names, values):
-                    file.write(k)
-                    file.write('\n')
-
-
-def get_weights_2(model_dir):
-#     line = "InceptionResnetV1/Conv2d_1a_3x3/BatchNorm/moving_mean/read"
-    line = "MobileNet/AssignMovingAvg/MobileNet/conv_1/bn/moving_mean/read"
-    
-    line_0 = line + ":0"
-    with tf.Graph().as_default():
-        with tf.Session() as sess:
-            my_train.load_model(model_dir)
-#             batch_size_placeholder = tf.get_default_graph().get_tensor_by_name("batch_size:0")
-#             phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-#             feed_dict = {batch_size_placeholder: 1, phase_train_placeholder: False}
-            weights = tf.get_default_graph().get_tensor_by_name(line_0)
-            print(sess.run(weights))
-    None
-
-def get_weights(model_dir):
-    file_lines = []
-    with open('../data/mobilenet_v1_weights/mobilenet_v1_variables.txt','r') as f:
-        for i in f.readlines():
-            file_lines.append(i.strip())
-    print(file_lines)
-    
-    with tf.Graph().as_default():
-        with tf.Session() as sess:
-            my_train.load_model(model_dir)
-            for line in file_lines:
-                line_0 = line + ":0"
-                print(line_0)
-                line_name = line.replace("/", "_")
-                line_name = line_name.replace("_read", "")
-                file_name = '../data/mobilenet_v1_weights/' + line_name + '.txt'
-                weights = tf.get_default_graph().get_tensor_by_name(line_0)
-                shape = weights.get_shape().as_list()
+            for name_0, value in zip(variable_names, values):
+                name = name_0.replace(":0", "")
+                name = name.replace("/", "_")
+                file_name = name + '.txt'
+                file_path = os.path.join(folder, file_name)
+                shape = value.shape
                 shape_len = len(shape)
-                with open(file_name, 'w') as file:
+                with open(file_path, 'w') as file:
                     if shape_len == 4:
                         [height, width, channel, output] = shape
                         for h in range(height):
                             for w in range(width):
                                 for c in range(channel):
                                     for n in range(output):
-                                        weight = weights[h][w][c][n].eval()
+                                        weight = value[h][w][c][n]
                                         file.write(str(weight))
                                         file.write('\n')
                     elif shape_len == 2:
                         [height, width] = shape
                         for h in range(height):
                             for w in range(width):
-                                weight = weights[h][w].eval()
+                                weight = value[h][w]
                                 file.write(str(weight))
                                 file.write('\n')
                     elif shape_len == 1:
                         [output] = shape
-                        print(output)
-                        print(sess.run(weights))
                         for n in range(output):
-                            weight = sess.run(weights[n])
+                            weight = value[n]
                             file.write(str(weight))
                             file.write('\n')
-    None
+
+#============================================================
 
 #============================================================
 
@@ -214,15 +190,12 @@ def run_validate():
 
 if __name__ == '__main__':
 #     model_dir = '../models/Inception_resnet_v1_20170512110547'
-    model_dir = '../models/mobilenet_v1_20200707123403'
-    model_name = "mobilenet_v1"
+#     model_name = "Inception_resnet_v1"
+    model_dir = '../models/mobilenet_v1_20200819132645'
+    model_name = "Mobilenet_v1"
     
-#     get_weights_2(model_dir)
-    get_trainable_variables(model_dir, model_name)
-#     test_code()
-#     test_get_images()
-#     run_validate()
-#     run_test()
+    get_trainable_variable_names(model_dir, model_name)
+#     get_trainable_weights(model_dir, model_name)
     print('____End____')
 
 

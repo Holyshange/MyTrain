@@ -145,14 +145,14 @@ def inference(images, keep_probability, phase_train=True,
                         weights_regularizer=slim.l2_regularizer(weight_decay),
                         normalizer_fn=slim.batch_norm,
                         normalizer_params=batch_norm_params):
-        return inception_resnet_v1(images, is_training=phase_train,
-              dropout_keep_prob=keep_probability, bottleneck_layer_size=bottleneck_layer_size, reuse=reuse)
+        return inception_resnet_v1(images, 
+                                   is_training=phase_train, 
+                                   dropout_keep_prob=keep_probability, 
+                                   bottleneck_layer_size=bottleneck_layer_size, 
+                                   reuse=reuse)
 
-
-def inception_resnet_v1(inputs, is_training=True,
-                        dropout_keep_prob=0.8,
-                        bottleneck_layer_size=128,
-                        reuse=None, 
+def inception_resnet_v1(inputs, is_training=True, dropout_keep_prob=0.8,
+                        bottleneck_layer_size=128, reuse=None, 
                         scope='InceptionResnetV1'):
     """Creates the Inception Resnet V1 model.
     Args:
