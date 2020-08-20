@@ -92,7 +92,7 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
         with sess.as_default():
             if pretrained_model:
                 print('Restoring pretrained model: %s' % pretrained_model)
-                saver.restore(sess, pretrained_model)
+                saver.restore(sess, tf.train.latest_checkpoint(pretrained_model))
             
             print('Running train......')
             for i_epoch in range(1, max_epochs + 1):
@@ -443,16 +443,16 @@ def run_train():
 #     model_name = "my_net"
     model_name = "mobilenet_v1"
     learning_rate_init = 0.05
-    learning_rate_decay_epochs = 10
+    learning_rate_decay_epochs = 100
     optimize_method = 'ADAM'
     image_height = 224
     image_width = 224
-    batch_size = 10
-    epoch_size = 10
+    batch_size = 100
+    epoch_size = 1000
     max_epochs = 280
     embedding_size = 1000
     weight_decay = 0.0005
-    pretrained_model = None
+    pretrained_model = '../models/mobilenet_v1_20200707123403'
     gpu_memory_fraction = 0.7
     train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, epoch_size, 
                max_epochs, image_height, image_width, embedding_size, weight_decay, optimize_method, 
