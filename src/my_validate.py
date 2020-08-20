@@ -191,11 +191,11 @@ def run_validate():
 if __name__ == '__main__':
 #     model_dir = '../models/Inception_resnet_v1_20170512110547'
 #     model_name = "Inception_resnet_v1"
-    model_dir = '../models/mobilenet_v1_20200819132645'
+    model_dir = '../models/mobilenet_v1_20200820142718'
     model_name = "Mobilenet_v1"
     
-    get_trainable_variable_names(model_dir, model_name)
-#     get_trainable_weights(model_dir, model_name)
+#     get_trainable_variable_names(model_dir, model_name)
+    get_trainable_weights(model_dir, model_name)
     print('____End____')
 
 

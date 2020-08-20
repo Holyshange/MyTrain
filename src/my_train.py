@@ -78,7 +78,9 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
                                                    learning_rate_decay_epochs*epoch_size, 
                                                    1.0, staircase=True)
         loss = get_loss(label_batch, logits)
-        train_op = train_step(loss, learning_rate, global_step, optimize_method)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            train_op = train_step(loss, learning_rate, global_step, optimize_method)
         accuracy = get_accuracy(label_batch, logits)
 
         saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=1)
@@ -106,8 +108,8 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
                     print('Trainning False!')
                     break
                 save_variables_and_metagraph(sess, saver, step, model_dir, model_name)
-                
-                validate_epoch(sess, enqueue_op, prelogits, label_batch, lfw_path_array, 
+                if (i_epoch > 100) and (i_epoch % 10 == 0):
+                    validate_epoch(sess, enqueue_op, prelogits, label_batch, lfw_path_array, 
                                batch_size, lfw_label_array, lfw_image_num, lfw_batch_num, 
                                issame_list, image_paths_placeholder, labels_placeholder, 
                                batch_size_placeholder, phase_train_placeholder)
@@ -334,6 +336,7 @@ def save_variables_and_metagraph(sess, saver, step, model_dir, model_name):
         saver.export_meta_graph(meta_file)
     print('Saving variables......')
     saver.save(sess, ckpt_file, global_step=step, write_meta_graph=False)
+    print('Done.')
 
 def load_model(model_dir, input_map=None):
     print('Model directory: %s' % model_dir)
@@ -443,20 +446,21 @@ def run_train():
 #     model_name = "my_net"
     model_name = "mobilenet_v1"
     learning_rate_init = 0.05
-    learning_rate_decay_epochs = 100
+    learning_rate_decay_epochs = 90
     optimize_method = 'ADAM'
     image_height = 224
     image_width = 224
-    batch_size = 100
+    batch_size = 90
     epoch_size = 1000
-    max_epochs = 280
+    max_epochs = 270
     embedding_size = 1000
     weight_decay = 0.0005
-    pretrained_model = '../models/mobilenet_v1_20200707123403'
+    pretrained_model = None
     gpu_memory_fraction = 0.7
-    train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, epoch_size, 
-               max_epochs, image_height, image_width, embedding_size, weight_decay, optimize_method, 
-               pretrained_model, learning_rate_init, learning_rate_decay_epochs, gpu_memory_fraction)
+    train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, 
+               epoch_size, max_epochs, image_height, image_width, embedding_size, 
+               weight_decay, optimize_method, pretrained_model, learning_rate_init, 
+               learning_rate_decay_epochs, gpu_memory_fraction)
 
 if __name__ == '__main__':
     run_train()

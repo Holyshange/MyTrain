@@ -5,7 +5,7 @@
 import tensorflow as tf
 from tensorflow.python.training import moving_averages
 
-UPDATE_OPS_COLLECTION = "_update_ops_"
+# UPDATE_OPS_COLLECTION = "_update_ops_"
 
 # create variable
 def create_variable(name, shape, initializer, dtype=tf.float32, trainable=True):
@@ -22,23 +22,18 @@ def bacthnorm(inputs, scope, epsilon=1e-05, momentum=0.99, is_training=True):
     axis = list(range(len(inputs_shape) - 1))
 
     with tf.variable_scope(scope):
-        beta = create_variable("beta", params_shape,
-                               initializer=tf.zeros_initializer())
-        gamma = create_variable("gamma", params_shape,
-                                initializer=tf.ones_initializer())
-        # for inference
-        moving_mean = create_variable("moving_mean", params_shape,
-                            initializer=tf.zeros_initializer(), trainable=False)
-        moving_variance = create_variable("moving_variance", params_shape,
-                            initializer=tf.ones_initializer(), trainable=False)
+        beta = create_variable("beta", params_shape, initializer=tf.zeros_initializer())
+        gamma = create_variable("gamma", params_shape, initializer=tf.ones_initializer())
+        moving_mean = create_variable("moving_mean", params_shape, 
+                                      initializer=tf.zeros_initializer())
+        moving_variance = create_variable("moving_variance", params_shape, 
+                                          initializer=tf.ones_initializer())
     if is_training:
         mean, variance = tf.nn.moments(inputs, axes=axis)
-        update_move_mean = moving_averages.assign_moving_average(moving_mean,
-                                                mean, decay=momentum)
-        update_move_variance = moving_averages.assign_moving_average(moving_variance,
-                                                variance, decay=momentum)
-        tf.add_to_collection(UPDATE_OPS_COLLECTION, update_move_mean)
-        tf.add_to_collection(UPDATE_OPS_COLLECTION, update_move_variance)
+        moving_mean = moving_averages.assign_moving_average(moving_mean, mean, decay=momentum)
+        moving_variance = moving_averages.assign_moving_average(moving_variance, variance, decay=momentum)
+        tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, moving_mean)
+        tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, moving_variance)
     else:
         mean, variance = moving_mean, moving_variance
     return tf.nn.batch_normalization(inputs, mean, variance, beta, gamma, epsilon)
@@ -88,8 +83,11 @@ def fc(inputs, n_out, scope, use_bias=True):
 
 
 class MobileNet(object):
-    def __init__(self, inputs, num_classes=1000, is_training=True,
-                 width_multiplier=1, scope="MobileNet"):
+    def __init__(self, inputs, 
+                 num_classes=1000, 
+                 is_training=True,
+                 width_multiplier=1, 
+                 scope="MobileNet"):
         """
         The implement of MobileNet(ref:https://arxiv.org/abs/1704.04861)
         :param inputs: 4-D Tensor of [batch_size, height, width, channels]
