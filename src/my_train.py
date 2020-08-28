@@ -52,7 +52,8 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
         enqueue_op = input_queue.enqueue_many([image_paths_placeholder, labels_placeholder], 
                                               name='enqueue_op')
         
-        image_batch, label_batch = get_batch(input_queue, batch_size_placeholder, image_height, image_width)
+        image_batch, label_batch = get_batch(input_queue, batch_size_placeholder, 
+                                             image_height, image_width)
         image_batch = tf.identity(image_batch, 'image_batch')
         label_batch = tf.identity(label_batch, 'label_batch')
         image_batch = tf.identity(image_batch, 'input')
@@ -61,8 +62,9 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
         print('Number of samples in training set: %d' % total_image_num)
         print('Building training graph')
         
-#         prelogits = my_net(image_batch, embedding_size, image_height, image_width)
-        mobilenet = mobilenet_v1.MobileNet(image_batch, num_classes=embedding_size)
+        mobilenet = mobilenet_v1.MobileNetV1(image_batch, 
+                                             num_classes=embedding_size, 
+                                             is_training=phase_train_placeholder)
         prelogits = mobilenet.logits
         prelogits = tf.identity(prelogits, 'prelogits')
         
@@ -446,13 +448,13 @@ def run_train():
 #     model_name = "my_net"
     model_name = "mobilenet_v1"
     learning_rate_init = 0.05
-    learning_rate_decay_epochs = 90
+    learning_rate_decay_epochs = 40
     optimize_method = 'ADAM'
     image_height = 224
     image_width = 224
-    batch_size = 90
+    batch_size = 100
     epoch_size = 1000
-    max_epochs = 270
+    max_epochs = 110
     embedding_size = 1000
     weight_decay = 0.0005
     pretrained_model = None
