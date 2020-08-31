@@ -12,7 +12,7 @@ from src.nets import mobilenet_v1
 
 def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, 
                epoch_size, max_epochs, image_height, image_width, embedding_size, 
-               weight_decay, optimize_method, pretrained_model, 
+               weight_decay, moving_average_decay, optimize_method, pretrained_model, 
                learning_rate_init, learning_rate_decay_epochs, gpu_memory_fraction):
     
     time_string = datetime.strftime(datetime.now(), '_%Y%m%d%H%M%S')
@@ -80,14 +80,10 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
                                                    learning_rate_decay_epochs*epoch_size, 
                                                    1.0, staircase=True)
         loss = get_loss(label_batch, logits)
-        trainable_variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-#         variable_averages = tf.train.ExponentialMovingAverage(moving_average_decay, global_step)
-#         variables_averages_op = variable_averages.apply(tf.trainable_variables())
-        with tf.control_dependencies(update_ops):
-            with tf.control_dependencies(trainable_variables):
-#                 with tf.control_dependencies(variables_averages_op):
-                    train_op = train_step(loss, learning_rate, global_step, optimize_method)
+        variable_averages = tf.train.ExponentialMovingAverage(moving_average_decay, global_step)
+        variables_averages_op = variable_averages.apply(tf.trainable_variables())
+        with tf.control_dependencies([variables_averages_op]):
+            train_op = train_step(loss, learning_rate, global_step, optimize_method, tf.global_variables())
         accuracy = get_accuracy(label_batch, logits)
 
         saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=1)
@@ -273,7 +269,7 @@ def get_loss(labels, logits):
     loss = tf.reduce_mean(cross_entropy, name='loss')
     return loss
 
-def train_step(loss, learning_rate, global_step, opt_method):
+def train_step(loss, learning_rate, global_step, opt_method, update_gradient_vars):
     if opt_method == 'ADAGRAD':
         optimizer = tf.train.AdagradOptimizer(learning_rate)
     elif opt_method == 'ADADELTA':
@@ -286,8 +282,10 @@ def train_step(loss, learning_rate, global_step, opt_method):
         optimizer = tf.train.MomentumOptimizer(learning_rate, 0.9, use_nesterov=True)
     else:
         raise ValueError('Invalid optimization algorithm')
-
-    train_step = optimizer.minimize(loss, global_step=global_step)
+    grads = optimizer.compute_gradients(loss, update_gradient_vars)
+    apply_gradient_op = optimizer.apply_gradients(grads, global_step=global_step)
+    with tf.control_dependencies([apply_gradient_op]):
+        train_step = optimizer.minimize(loss, global_step=global_step)
     return train_step
 
 def get_accuracy(labels, logits):
@@ -462,36 +460,17 @@ def run_train():
     max_epochs = 90
     embedding_size = 1000
     weight_decay = 0.0005
-#     moving_average_decay = 0.9999
+    moving_average_decay = 0.9999
     pretrained_model = None
     gpu_memory_fraction = 0.7
     train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, 
                epoch_size, max_epochs, image_height, image_width, embedding_size, 
-               weight_decay, optimize_method, pretrained_model, 
+               weight_decay, moving_average_decay, optimize_method, pretrained_model, 
                learning_rate_init, learning_rate_decay_epochs, gpu_memory_fraction)
 
 if __name__ == '__main__':
     run_train()
     print('____End____')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

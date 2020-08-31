@@ -234,17 +234,17 @@ def run_validate():
                   image_width, batch_size, gpu_memory_fraction)
 
 if __name__ == '__main__':
-    model_dir = '../models/Mobilenet_v1_20200831095103'
+    model_dir = '../models/Mobilenet_v1_20200831144406'
     model_name = "MobileNetV1"
     
-#     get_trainable_variables(model_dir, model_name)
+    get_trainable_variables(model_dir, model_name)
 #     get_variables(model_dir, model_name)
 #     get_weights(model_dir, model_name)
     
 #     'MobileNet/conv_1/conv/Conv2D:0'
-    image_path = '../data/test/Amy_Smart_224.bmp'
-    variable_0 = 'MobileNet/conv_1/conv/Conv2D:0'
-    get_feature(model_dir, image_path, variable_0)
+#     image_path = '../data/test/Amy_Smart_224.bmp'
+#     variable_0 = 'MobileNet/conv_1/conv/Conv2D:0'
+#     get_feature(model_dir, image_path, variable_0)
     
 
     print('____End____')
