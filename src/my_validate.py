@@ -146,10 +146,10 @@ def get_weights(model_dir, model_name):
                 shape_len = len(shape)
                 with open(file_path, 'w') as file:
                     if shape_len == 4:
-                        if 'depthwise_conv' in file_name:
+                        if 'dw_conv' in file_name:
                             [height, width, channel, multiplier] = shape
-                            for c in range(channel):
-                                for m in range(multiplier):
+                            for m in range(multiplier):
+                                for c in range(channel):
                                     for h in range(height):
                                         for w in range(width):
                                             value = weight[h][w][c][m]
@@ -234,15 +234,16 @@ def run_validate():
                   image_width, batch_size, gpu_memory_fraction)
 
 if __name__ == '__main__':
-    model_dir = '../models/Mobilenet_v1_20200824085215'
+    model_dir = '../models/Mobilenet_v1_20200831095103'
     model_name = "MobileNetV1"
     
 #     get_trainable_variables(model_dir, model_name)
 #     get_variables(model_dir, model_name)
 #     get_weights(model_dir, model_name)
     
+#     'MobileNet/conv_1/conv/Conv2D:0'
     image_path = '../data/test/Amy_Smart_224.bmp'
-    variable_0 = 'MobileNet/Conv2D:0'
+    variable_0 = 'MobileNet/conv_1/conv/Conv2D:0'
     get_feature(model_dir, image_path, variable_0)
     
 

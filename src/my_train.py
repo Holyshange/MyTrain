@@ -12,8 +12,8 @@ from src.nets import mobilenet_v1
 
 def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, 
                epoch_size, max_epochs, image_height, image_width, embedding_size, 
-               weight_decay, optimize_method, pretrained_model, learning_rate_init, 
-               learning_rate_decay_epochs, gpu_memory_fraction):
+               weight_decay, optimize_method, pretrained_model, 
+               learning_rate_init, learning_rate_decay_epochs, gpu_memory_fraction):
     
     time_string = datetime.strftime(datetime.now(), '_%Y%m%d%H%M%S')
     subdir = model_name + time_string
@@ -80,9 +80,14 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
                                                    learning_rate_decay_epochs*epoch_size, 
                                                    1.0, staircase=True)
         loss = get_loss(label_batch, logits)
+        trainable_variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+#         variable_averages = tf.train.ExponentialMovingAverage(moving_average_decay, global_step)
+#         variables_averages_op = variable_averages.apply(tf.trainable_variables())
         with tf.control_dependencies(update_ops):
-            train_op = train_step(loss, learning_rate, global_step, optimize_method)
+            with tf.control_dependencies(trainable_variables):
+#                 with tf.control_dependencies(variables_averages_op):
+                    train_op = train_step(loss, learning_rate, global_step, optimize_method)
         accuracy = get_accuracy(label_batch, logits)
 
         saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=1)
@@ -457,12 +462,13 @@ def run_train():
     max_epochs = 90
     embedding_size = 1000
     weight_decay = 0.0005
+#     moving_average_decay = 0.9999
     pretrained_model = None
     gpu_memory_fraction = 0.7
     train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size, 
                epoch_size, max_epochs, image_height, image_width, embedding_size, 
-               weight_decay, optimize_method, pretrained_model, learning_rate_init, 
-               learning_rate_decay_epochs, gpu_memory_fraction)
+               weight_decay, optimize_method, pretrained_model, 
+               learning_rate_init, learning_rate_decay_epochs, gpu_memory_fraction)
 
 if __name__ == '__main__':
     run_train()

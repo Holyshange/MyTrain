@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
 
 def create_variable(name, shape, initializer, dtype=tf.float32, trainable=True):
     return tf.get_variable(name, shape=shape, dtype=dtype, 
@@ -23,10 +24,17 @@ def depthwise_conv2d(inputs, filter_size=3, channel_multiplier=1, strides=1, sco
         return tf.nn.depthwise_conv2d(inputs, weights, strides=[1, strides, strides, 1], 
                                       padding="SAME", rate=[1, 1])
 
-def bacth_norm(inputs, epsilon=1e-05, momentum=0.99, is_training=True, scope='bn'):
-    with tf.variable_scope(scope):
-        return tf.layers.batch_normalization(inputs, momentum=momentum, 
-                                             epsilon=epsilon, training=is_training)
+def bacth_norm(inputs, is_training=True, scope='bn'):
+    normalizer_params = {
+        'decay': 0.995,
+        'epsilon': 0.001,
+        'scope': scope,
+        'updates_collections': None,
+        'variables_collections': [ tf.GraphKeys.TRAINABLE_VARIABLES ],
+        }
+    with slim.arg_scope([slim.batch_norm], is_training=is_training):
+        return slim.batch_norm(inputs, **normalizer_params)
+        
 
 def relu(inputs, scope='relu'):
     with tf.variable_scope(scope):
