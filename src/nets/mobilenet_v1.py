@@ -24,17 +24,16 @@ def depthwise_conv2d(inputs, filter_size=3, channel_multiplier=1, strides=1, sco
         return tf.nn.depthwise_conv2d(inputs, weights, strides=[1, strides, strides, 1], 
                                       padding="SAME", rate=[1, 1])
 
-def bacth_norm(inputs, is_training=True, scope='bn'):
+def bacth_norm(inputs, is_training=True, scope='BN'):
     normalizer_params = {
         'decay': 0.995,
         'epsilon': 0.001,
         'scope': scope,
         'updates_collections': None,
-        'variables_collections': [ tf.GraphKeys.TRAINABLE_VARIABLES ],
+        'variables_collections': [tf.GraphKeys.TRAINABLE_VARIABLES],
         }
     with slim.arg_scope([slim.batch_norm], is_training=is_training):
         return slim.batch_norm(inputs, **normalizer_params)
-        
 
 def relu(inputs, scope='relu'):
     with tf.variable_scope(scope):

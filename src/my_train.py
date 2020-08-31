@@ -80,10 +80,8 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
                                                    learning_rate_decay_epochs*epoch_size, 
                                                    1.0, staircase=True)
         loss = get_loss(label_batch, logits)
-        variable_averages = tf.train.ExponentialMovingAverage(moving_average_decay, global_step)
-        variables_averages_op = variable_averages.apply(tf.trainable_variables())
-        with tf.control_dependencies([variables_averages_op]):
-            train_op = train_step(loss, learning_rate, global_step, optimize_method, tf.global_variables())
+        train_op = train_step(loss, learning_rate, global_step, optimize_method, 
+                              moving_average_decay, tf.global_variables())
         accuracy = get_accuracy(label_batch, logits)
 
         saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=1)
@@ -269,7 +267,8 @@ def get_loss(labels, logits):
     loss = tf.reduce_mean(cross_entropy, name='loss')
     return loss
 
-def train_step(loss, learning_rate, global_step, opt_method, update_gradient_vars):
+def train_step(loss, learning_rate, global_step, opt_method, 
+               moving_average_decay, update_gradient_vars):
     if opt_method == 'ADAGRAD':
         optimizer = tf.train.AdagradOptimizer(learning_rate)
     elif opt_method == 'ADADELTA':
@@ -284,7 +283,9 @@ def train_step(loss, learning_rate, global_step, opt_method, update_gradient_var
         raise ValueError('Invalid optimization algorithm')
     grads = optimizer.compute_gradients(loss, update_gradient_vars)
     apply_gradient_op = optimizer.apply_gradients(grads, global_step=global_step)
-    with tf.control_dependencies([apply_gradient_op]):
+    variable_averages = tf.train.ExponentialMovingAverage(moving_average_decay, global_step)
+    variables_averages_op = variable_averages.apply(tf.trainable_variables())
+    with tf.control_dependencies([apply_gradient_op, variables_averages_op]):
         train_step = optimizer.minimize(loss, global_step=global_step)
     return train_step
 
