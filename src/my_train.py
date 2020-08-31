@@ -450,7 +450,7 @@ def run_train():
     pairs_txt = '../data/pairs.txt'
     model_root = '../models'
 #     model_name = "my_net"
-    model_name = "mobilenet_v1"
+    model_name = "mobileNetV1"
     learning_rate_init = 0.05
     learning_rate_decay_epochs = 30
     optimize_method = 'ADAM'

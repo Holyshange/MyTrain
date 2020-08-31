@@ -107,25 +107,6 @@ def get_conv2d_weight(model_dir, name_0):
                                 file.write(str(value))
                                 file.write('\n')
 
-def get_depthwise_conv2d_weight(model_dir, name_0):
-    name = name_0.replace(":0", "")
-    name = name.replace("/", "_")
-    file_name = name + '.txt'
-    file_path = os.path.join('../data/weights', file_name)
-    with tf.Graph().as_default():
-        with tf.Session() as sess:
-            my_train.load_model(model_dir)
-            weights = sess.run(name_0)
-            with open(file_path, 'w') as file:
-                [height, width, channel, multiplier] = weights.shape
-                for c in range(channel):
-                    for m in range(multiplier):
-                        for h in range(height):
-                            for w in range(width):
-                                value = weights[h][w][c][m]
-                                file.write(str(value))
-                                file.write('\n')
-
 #============================================================
 
 def get_weights(model_dir, model_name):
@@ -146,24 +127,14 @@ def get_weights(model_dir, model_name):
                 shape_len = len(shape)
                 with open(file_path, 'w') as file:
                     if shape_len == 4:
-                        if 'dw_conv' in file_name:
-                            [height, width, channel, multiplier] = shape
-                            for m in range(multiplier):
-                                for c in range(channel):
-                                    for h in range(height):
-                                        for w in range(width):
-                                            value = weight[h][w][c][m]
-                                            file.write(str(value))
-                                            file.write('\n')
-                        else:
-                            [height, width, channel, number] = shape
-                            for n in range(number):
-                                for c in range(channel):
-                                    for h in range(height):
-                                        for w in range(width):
-                                            value = weight[h][w][c][n]
-                                            file.write(str(value))
-                                            file.write('\n')
+                        [height, width, channel, number] = shape
+                        for n in range(number):
+                            for c in range(channel):
+                                for h in range(height):
+                                    for w in range(width):
+                                        value = weight[h][w][c][n]
+                                        file.write(str(value))
+                                        file.write('\n')
                     elif shape_len == 2:
                         [height, width] = shape
                         for h in range(height):
