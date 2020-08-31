@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 def create_variable(name, shape, initializer, dtype=tf.float32, trainable=True):
     return tf.get_variable(name, shape=shape, dtype=dtype, 
                            initializer=initializer, trainable=trainable)
@@ -54,15 +53,11 @@ def fc(inputs, n_out, use_bias=True, scope='fc'):
         return tf.matmul(inputs, weight)
 
 class MobileNetV1(object):
-    def __init__(self, 
-                 inputs, 
-                 num_classes=1000, 
-                 is_training=True,
-                 scope="MobileNet"):
+    def __init__(self, inputs, num_classes=1000, is_training=True, scope="MobileNet"):
         self.inputs = inputs
         self.num_classes = num_classes
         self.is_training = is_training
-
+        
         with tf.variable_scope(scope):
             with tf.variable_scope('conv_1'):
                 net = conv2d(inputs, 32, filter_size=3, strides=2)
@@ -81,82 +76,24 @@ class MobileNetV1(object):
             net = self._depthwise_separable_conv2d(net, 512, "ds_conv_12")
             net = self._depthwise_separable_conv2d(net, 1024, "ds_conv_13", downsample=True)
             net = self._depthwise_separable_conv2d(net, 1024, "ds_conv_14")
-            net = avg_pool(net, 7, "avg_pool_15")
+            net = avg_pool(net, 7, scope="avg_pool_15")
             net = tf.squeeze(net, [1, 2], name="SpatialSqueeze")
-            self.logits = fc(net, self.num_classes, "fc_16")
+            self.logits = fc(net, self.num_classes, scope="fc_16")
             self.predictions = tf.nn.softmax(self.logits)
 
     def _depthwise_separable_conv2d(self, inputs, num_filters, scope, downsample=False):
         strides = 2 if downsample else 1
         with tf.variable_scope(scope):
-            net = depthwise_conv2d(inputs, strides=strides, "dw_conv")
-            net = bacth_norm(net, is_training=self.is_training, "dw_bn")
-            net = relu(net, 'dw_relu')
-            net = conv2d(net, num_filters, "pw_conv")
-            net = bacth_norm(net, is_training=self.is_training, "pw_bn")
-            net = relu(net, 'pw_relu')
+            net = depthwise_conv2d(inputs, strides=strides, scope="dw_conv")
+            net = bacth_norm(net, is_training=self.is_training, scope="dw_bn")
+            net = relu(net, scope='dw_relu')
+            net = conv2d(net, num_filters, scope="pw_conv")
+            net = bacth_norm(net, is_training=self.is_training, scope="pw_bn")
+            net = relu(net, scope='pw_relu')
             return net
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == '__main__':
+    None
 
 
 

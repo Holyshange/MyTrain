@@ -448,13 +448,13 @@ def run_train():
 #     model_name = "my_net"
     model_name = "mobilenet_v1"
     learning_rate_init = 0.05
-    learning_rate_decay_epochs = 40
+    learning_rate_decay_epochs = 30
     optimize_method = 'ADAM'
     image_height = 224
     image_width = 224
     batch_size = 100
     epoch_size = 1000
-    max_epochs = 110
+    max_epochs = 90
     embedding_size = 1000
     weight_decay = 0.0005
     pretrained_model = None
