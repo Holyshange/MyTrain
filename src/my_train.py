@@ -6,7 +6,8 @@ from datetime import datetime
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
-from src.nets import mobilenet_v1
+# from src.nets import mobilenet_v1
+from src.nets import MyMobileNetV1
 
 #============================================================
 
@@ -62,11 +63,16 @@ def train_stem(data_dir, lfw_dir, pairs_txt, model_root, model_name, batch_size,
         print('Number of samples in training set: %d' % total_image_num)
         print('Building training graph')
         
-        mobilenet = mobilenet_v1.MobileNetV1(image_batch, 
-                                             num_classes=embedding_size, 
-                                             is_training=phase_train_placeholder)
-        prelogits = mobilenet.logits
-        prelogits = tf.identity(prelogits, 'prelogits')
+#         mobilenet = mobilenet_v1.MobileNetV1(image_batch, 
+#                                              num_classes=embedding_size, 
+#                                              is_training=phase_train_placeholder)
+#         prelogits = mobilenet.logits
+#         prelogits = tf.identity(prelogits, 'prelogits')
+        
+        prelogits, _ = MyMobileNetV1.inference(image_batch, 
+                                               num_classes=embedding_size, 
+                                               keep_prob=0.8, 
+                                               is_training=phase_train_placeholder)
         
         logits = slim.fully_connected(prelogits, 
                                       category_num, 
