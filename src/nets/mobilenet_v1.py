@@ -9,6 +9,8 @@ def conv2d(inputs, num_filters, filter_size=1, strides=1, scope='conv'):
     inputs_shape = inputs.get_shape().as_list()
     in_channels = inputs_shape[-1]
     with tf.variable_scope(scope):
+#         [batch, in_height, in_width, in_channels]
+#         [filter_height, filter_width, in_channels, out_channels]
         weights = create_variable("Filter", 
                                   shape=[filter_size, filter_size, in_channels, num_filters], 
                                   initializer=tf.truncated_normal_initializer(stddev=0.01))
@@ -18,11 +20,13 @@ def depthwise_conv2d(inputs, filter_size=3, channel_multiplier=1, strides=1, sco
     inputs_shape = inputs.get_shape().as_list()
     in_channels = inputs_shape[-1]
     with tf.variable_scope(scope):
+#         [filter_height, filter_width, in_channels, channel_multiplier]
         weights = create_variable("Filter", 
                                   shape=[filter_size, filter_size, in_channels, channel_multiplier], 
                                   initializer=tf.truncated_normal_initializer(stddev=0.01))
         return tf.nn.depthwise_conv2d(inputs, weights, strides=[1, strides, strides, 1], 
-                                      padding="SAME", rate=[1, 1])
+                                      padding="SAME", rate=[1, 1], data_format="NHWC")
+#         [batch, out_height, out_width, in_channels * channel_multiplier]
 
 def bacth_norm(inputs, is_training=True, scope='BN'):
     normalizer_params = {
