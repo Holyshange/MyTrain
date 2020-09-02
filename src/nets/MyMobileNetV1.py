@@ -84,7 +84,8 @@ def _depthwise_separable_conv2d(inputs, num_filters, scope, downsample=False):
         net = slim.conv2d(net, num_filters, 1, stride=1, scope='PW_CONV')
         return net
 
-
+if __name__ == '__main__':
+    None
 
 
 

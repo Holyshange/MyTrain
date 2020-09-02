@@ -2,6 +2,7 @@ import os
 import sys
 import numpy as np
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
 
 from src import my_train
 from src import my_utils
@@ -233,23 +234,20 @@ if __name__ == '__main__':
     model_dir = '../models/MobileNetV1_20200831164010'
     model_name = "MobileNetV1"
     
-#     get_weights(model_dir, model_name)
 #     get_trainable_variables(model_dir, model_name)
 #     get_variables(model_dir, model_name)
-    
+#     get_weights(model_dir, model_name)
+
 #     'MobileNet/conv_1/conv/Conv2D:0'
 #     'MobileNet/conv_1/relu/Relu:0'
 #     'MobileNet/ds_conv_2/dw_conv/depthwise:0'
 #     'MobileNet/ds_conv_2/dw_relu/Relu:0'
 #     'prelogits:0'
 
-#     image_path = '../data/test/Amy_Smart_224.bmp'
-#     variable_0 = 'MobileNet/ds_conv_2/dw_conv/depthwise:0'
-#     get_feature(model_dir, image_path, variable_0)
+    image_path = '../data/test/Amy_Smart_224.bmp'
+    variable_0 = 'MobileNet/ds_conv_2/dw_conv/depthwise:0'
+    get_feature(model_dir, image_path, variable_0)
 
-#     weight_0 = 'MobileNet/ds_conv_2/dw_conv/Filter:0'
-
-#     get_weight(model_dir, weight_0)
     
 
     print('____End____')
